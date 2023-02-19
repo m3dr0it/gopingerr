@@ -2,28 +2,33 @@ package main
 
 import (
 	"fmt"
-	"golang.org/x/net/icmp"
-	"golang.org/x/net/ipv4"
 	"log"
 	"net"
 	"os"
+	"os/exec"
 	"time"
+
+	"golang.org/x/net/icmp"
+	"golang.org/x/net/ipv4"
 )
 
 func main() {
-	pingWithIcmp()
+	var ipDb string = "192.168.1.1"
+	for {
+		if pingWithIcmp(ipDb) {
+			exec.Command("ls")
+			break
+		}
+		log.Println("not connected")
+	}
 }
 
-func pingWithIcmp() {
-
+func pingWithIcmp(ip string) bool {
+	isConnected := false
 	packetCon, err := icmp.ListenPacket("ip4:1", "0.0.0.0")
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-
-	log.Println(packetCon)
-
-	log.Println(os.Getpid())
 
 	icmpMessage := icmp.Message{
 		Type: ipv4.ICMPTypeEcho,
@@ -40,7 +45,7 @@ func pingWithIcmp() {
 		log.Fatal(err.Error())
 	}
 
-	dst, err := net.ResolveIPAddr("ip", "192.168.1.2")
+	dst, err := net.ResolveIPAddr("ip", "192.168.1.102")
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -58,7 +63,7 @@ func pingWithIcmp() {
 	n, peer, err := packetCon.ReadFrom(rb)
 
 	if err != nil {
-		log.Fatal(err.Error())
+		return false
 	}
 
 	rm, err := icmp.ParseMessage(1, rb[:n])
@@ -72,8 +77,11 @@ func pingWithIcmp() {
 	switch rm.Type {
 	case ipv4.ICMPTypeEchoReply:
 		fmt.Printf("received from %v", peer)
+		isConnected = true
 	default:
 		fmt.Printf("Failed: %+v\n", rm)
+		isConnected = false
 	}
+	return isConnected
 
 }
