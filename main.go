@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"strings"
 	"time"
 
 	"golang.org/x/net/icmp"
@@ -15,7 +16,7 @@ import (
 func main() {
 	var ipDb string = "8.8.8.8"
 	for {
-		if pingWithIcmp(ipDb) {
+		if pingWithCommand(ipDb) {
 			output, err := exec.Command("mkdir", "test").Output()
 
 			if err != nil {
@@ -28,6 +29,24 @@ func main() {
 		}
 		log.Println("not connected")
 	}
+}
+
+func pingWithCommand(ip string) bool {
+	output, err := exec.Command("ping", ip).Output()
+
+	isConnected := false
+
+	if err != nil {
+		log.Println(err.Error())
+	}
+
+	outputSplitted := strings.Split(string(output), "\n")
+
+	if strings.Contains(outputSplitted[2], "Reply") {
+		isConnected = true
+	}
+
+	return isConnected
 }
 
 func pingWithIcmp(ip string) bool {
