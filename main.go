@@ -13,10 +13,17 @@ import (
 )
 
 func main() {
-	var ipDb string = "192.168.1.1"
+	var ipDb string = "8.8.8.8"
 	for {
 		if pingWithIcmp(ipDb) {
-			exec.Command("ls")
+			output, err := exec.Command("mkdir", "test").Output()
+
+			if err != nil {
+				log.Println(err.Error())
+			}
+
+			fmt.Println(string(output))
+
 			break
 		}
 		log.Println("not connected")
@@ -45,12 +52,12 @@ func pingWithIcmp(ip string) bool {
 		log.Fatal(err.Error())
 	}
 
-	dst, err := net.ResolveIPAddr("ip", "192.168.1.102")
+	dst, err := net.ResolveIPAddr("ip", ip)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
-	timeout, _ := time.ParseDuration("1s")
+	timeout, _ := time.ParseDuration("3s")
 	err = packetCon.SetDeadline(time.Now().Add(timeout))
 	_, err = packetCon.WriteTo(wb, dst)
 
